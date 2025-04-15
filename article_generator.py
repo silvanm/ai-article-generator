@@ -1,6 +1,7 @@
 import os
 import dotenv
 import logging
+from datetime import datetime
 from llama_index.llms.openai import OpenAI
 from llama_index.core.agent import ReActAgent
 from llama_index.core.tools import FunctionTool
@@ -72,24 +73,29 @@ class ArticleGenerator:
         """
         logger.info(f"Generating article for keywords: '{keywords}'")
 
+        # Get current date
+        current_date = datetime.now().strftime("%Y-%m-%d")
+
         # Define the prompt for the ReAct agent
-        # Instructing it to use search and scrape, and format as HTML
+        # Instructing it to use search and scrape, format as HTML, and use recent info
         prompt = f"""
         You are an expert writer tasked with creating a comprehensive and engaging article.
         Your goal is to synthesize information from multiple reliable sources to produce a single, well-structured HTML article about: "{keywords}".
 
+        Today's date is {current_date}.
+
         Follow these steps:
-        1.  Use the 'search' tool to find relevant articles and sources about "{keywords}". Aim for 3-5 diverse and reputable sources if possible.
-        2.  Analyze the search results. Identify promising URLs that likely contain detailed information.
+        1.  Use the 'search' tool to find relevant articles and sources about "{keywords}". **Prioritize sources published within the last 6 months.**
+        2.  Analyze the search results. Identify promising URLs that likely contain detailed and recent information (published within the last 6 months if possible).
         3.  Use the 'scrape' tool to extract the main content (in markdown format) from the selected URLs. Scrape at least 2-3 different sources to ensure a comprehensive overview. **Keep track of the URLs you successfully scrape content from.**
-        4.  Synthesize the information gathered from the scraped content.
+        4.  Synthesize the information gathered from the scraped content. **Focus on information confirmed by recent sources (last 6 months).**
         5.  Write a single, coherent article based *only* on the information you scraped. Do not add information not present in the sources.
         6.  Format the final article strictly as HTML. Use appropriate tags like <h1>, <h2>, <p>, <ul>, <li>, <strong>, etc. for structure and readability.
-        7.  The article should be informative, well-organized, and easy to read.
+        7.  The article should be informative, well-organized, and easy to read, reflecting the most current information available in your sources.
         8.  Include a brief introductory paragraph and a concluding summary.
         9.  **At the end of the article, add a section titled 'Sources' (e.g., using an <h2> tag). Under this heading, list the URLs you successfully scraped content from in step 3, ideally as an unordered list (<ul><li><a>...</a></li></ul>).**
         10. Do NOT include any preamble like "Here is the HTML article:". Just output the raw HTML starting with the <h1> tag and ending with the sources list.
-        11. If you encounter errors during search or scraping, try alternative queries or URLs, but if you cannot gather sufficient information after a reasonable number of attempts, state that you were unable to generate the article due to lack of sources (as a simple HTML paragraph).
+        11. If you encounter errors during search or scraping, try alternative queries or URLs, but if you cannot gather sufficient information after a reasonable number of attempts (especially recent information), state that you were unable to generate the article due to lack of suitable sources (as a simple HTML paragraph).
 
         Generate the HTML article now.
         """
