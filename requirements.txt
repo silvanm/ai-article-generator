@@ -1,0 +1,6 @@
+streamlit
+llama-index
+firecrawl-py
+httpx
+python-dotenv
+openai 
